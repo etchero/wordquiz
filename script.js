@@ -580,9 +580,9 @@ function showAnswerFeedback(isCorrect) {
   const exampleText = answerFeedback.querySelector('.example-text');
   
   if (isCorrect) {
-    feedbackText.textContent = '정답입니다! 👏';
+    feedbackText.textContent = '정답입니다^^! 👏';
   } else {
-    feedbackText.textContent = `오답입니다. 정답은 "${currentQuestion.correctAnswer}"입니다.`;
+    feedbackText.textContent = `오답이네요ㅠ 정답은 "${currentQuestion.correctAnswer}"입니다.`;
   }
   
   exampleText.textContent = currentQuestion.example;
@@ -609,17 +609,26 @@ function showQuizResults() {
   // 점수 표시
   finalScoreElement.textContent = finalScorePercent;
   
-  // 점수에 따른 색상과 메시지
-  if (finalScorePercent >= 90) {
-    finalScoreElement.style.color = '#2ecc71';
-    resultMessageElement.textContent = '오~ 대박! 정말 잘했구나! 칭찬해~^^';
-  } else if (finalScorePercent >= 80) {
-    finalScoreElement.style.color = '#3498db';
-    resultMessageElement.textContent = '아쉽다! 다음에는 조금만 더 노력해보자!';
-  } else {
-    finalScoreElement.style.color = '#e74c3c';
-    resultMessageElement.textContent = '에구 우짜노ㅠ 더 많은 암기가 필요해! 힘내!';
-  }
+ // 점수에 따른 색상과 메시지
+if (finalScorePercent >= 96) {
+  finalScoreElement.style.color = '#2ecc71';
+  resultMessageElement.textContent = '오~ 대박! 정말 잘했어!';
+} else if (finalScorePercent >= 90) {
+  finalScoreElement.style.color = '#2ecc71';
+  resultMessageElement.textContent = '잘했어! 다음에는 96점 이상 도전!';
+} else if (finalScorePercent >= 85) {
+  finalScoreElement.style.color = '#3498db';
+  resultMessageElement.textContent = '조금 아쉽다! 다음에는 90점 이상 도전!';
+} else if (finalScorePercent >= 80) {
+  finalScoreElement.style.color = '#3498db';
+  resultMessageElement.textContent = '조금만 더 노력해서 85점 이상 도전!';
+} else if (finalScorePercent >= 75) {
+  finalScoreElement.style.color = '#e74c3c';
+  resultMessageElement.textContent = '에구ㅠ 힘내서 80점 이상 도전!';
+} else {
+  finalScoreElement.style.color = '#e74c3c';
+  resultMessageElement.textContent = '에구 우째ㅠㅠ 실망하지 말고 다시 처음부터 암기해보자!';
+}
   
   // 오답 목록 표시
   wrongAnswersList.innerHTML = '';

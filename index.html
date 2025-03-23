@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>안동 영어종결 나만의 퀴즈</title>
+  <title>안동 영어종결 나만의 오답 퀴즈</title>
 </head>
 <body>
   <div class="container">
-    <h1>안동 영어종결 나만의 퀴즈 version1.0</h1>
+    <h1>안동 영어종결 나만의 오답 퀴즈 Ver1.0</h1>
     
     <div id="vocabulary-section" class="section">
       <h2>단어장 만들기</h2>
-      
-      <div class="input-group">
-        <label for="search-word">단어 검색:</label>
-        <input type="text" id="search-word" placeholder="단어 입력...">
-      </div>
       
       <div class="input-group">
         <label for="batch-words">여러 단어 추가 (쉼표 또는 줄바꿈으로 구분)</label>
@@ -48,7 +42,6 @@
               <tr>
                 <th>번호</th>
                 <th>영어 단어</th>
-                <th>발음</th>
                 <th>한국어 뜻</th>
                 <th>관리</th>
               </tr>
@@ -66,23 +59,13 @@
           <span id="score-display">점수: 0점</span>
         </div>
         <div id="timer" class="timer">6</div>
-        <div>
-          <label for="quiz-difficulty">난이도:</label>
-          <select id="quiz-difficulty">
-            <option value="easy">초급</option>
-            <option value="medium" selected>중급</option>
-            <option value="hard">고급</option>
-          </select>
-        </div>
       </div>
       
       <div class="quiz-content">
         <h2 id="quiz-word">Word</h2>
-        <button id="speak-word" class="speak-button">🔊</button>
-        <div class="progress-bar-container">
-          <div id="quiz-progress-bar" class="progress-bar"></div>
+        <div class="options-container" id="options-container">
+          <!-- 선택지가 여기에 동적으로 생성됩니다 -->
         </div>
-        <div class="options-container" id="options-container"></div>
         <div id="answer-feedback" class="answer-feedback hidden">
           <p class="feedback-text"></p>
           <p class="example-text"></p>
@@ -109,6 +92,5 @@
     
     <div id="notification" class="notification hidden"></div>
   </div>
-<script src="script.js"></script>
 </body>
 </html>

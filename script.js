@@ -1,4 +1,4 @@
-// 영어 단어장과 퀴즈 프로그램
+// 안동 영종 단어와 퀴즈 어플
 
 // DOM 요소들
 const batchWordsInput = document.getElementById('batch-words');

@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <link rel="stylesheet" href="style.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>안동 영어종결센터 My Own Words Ver1.0</title>
+  <title>영어 단어 퀴즈 프로그램</title>
 </head>
 <body>
   <div class="container">
- <h1>
+  <h1>
   <span class="main-title">안동 영어종결센터</span><br>
   <span class="subtitle"><span class="highlight">M</span>y <span class="highlight">O</span>wn <span class="highlight">W</span>ords <span class="version"><span style="font-size: 66.7%;">Ver1.0</span></span></span>
 </h1>
+    
+    <div id="vocabulary-section" class="section">
+      <h2>단어장 만들기</h2>
       
-      <h2>단어장 만들기</h2>      
       <div class="input-group">
         <label for="batch-words">여러 단어 추가 (쉼표 또는 줄바꿈으로 구분)</label>
         <textarea id="batch-words" placeholder="예: apple, banana, cherry 또는 한 줄에 하나씩 입력"></textarea>
@@ -94,6 +95,5 @@
     
     <div id="notification" class="notification hidden"></div>
   </div>
-  <script src="script.js"></script>
 </body>
 </html>

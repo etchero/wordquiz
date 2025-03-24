@@ -24,6 +24,10 @@ const resultMessageElement = document.getElementById('result-message');
 const wrongAnswersList = document.getElementById('wrong-answers-list');
 const reviewWrongAnswersBtn = document.getElementById('review-wrong-answers');
 const returnToVocabularyBtn = document.getElementById('return-to-vocabulary');
+// 단어장 선택 UI 요소
+const databaseSelector = document.getElementById('database-selector');
+const loadDatabaseBtn = document.getElementById('load-database');
+const clearCurrentBtn = document.getElementById('clear-current');
 // 단어장 데이터 저장 (로컬 스토리지에서 불러오기)
 let vocabulary = JSON.parse(localStorage.getItem('vocabulary')) || [];
 let quizQuestions = [];
@@ -35,66 +39,35 @@ let wrongAnswers = [];
 let isReviewMode = false;
 // 간단한 오프라인 사전 데이터 (실제로는 더 많은 단어 포함 필요)
 const offlineDictionary = {
-  "apple": "사과",
-  "banana": "바나나",
-  "orange": "오렌지",
-  "grape": "포도",
-  "strawberry": "딸기",
-  "watermelon": "수박",
-  "computer": "컴퓨터",
-  "book": "책",
-  "pen": "펜",
-  "paper": "종이",
-  "table": "테이블",
-  "chair": "의자",
-  "door": "문",
-  "window": "창문",
-  "house": "집",
-  "car": "자동차",
-  "bicycle": "자전거",
-  "train": "기차",
-  "airplane": "비행기",
-  "school": "학교",
-  "student": "학생",
-  "teacher": "선생님",
-  "friend": "친구",
-  "family": "가족",
-  "father": "아버지",
-  "mother": "어머니",
-  "brother": "형제",
-  "sister": "자매",
-  "dog": "개",
-  "cat": "고양이",
-  "bird": "새",
-  "fish": "물고기",
-  "water": "물",
-  "food": "음식",
-  "breakfast": "아침식사",
-  "lunch": "점심식사",
-  "dinner": "저녁식사",
-  "time": "시간",
-  "day": "날",
-  "week": "주",
-  "month": "월",
-  "year": "년",
-  "today": "오늘",
-  "tomorrow": "내일",
-  "yesterday": "어제",
-  "weather": "날씨",
-  "sun": "태양",
-  "moon": "달",
-  "star": "별",
-  "rain": "비",
-  "snow": "눈"
+  /* 기존 코드 유지 */
 };
-// 예문 데이터
-const exampleSentences = {
-  "apple": "An apple a day keeps the doctor away. (하루에 사과 한 개면 의사가 필요 없다.)",
-  "banana": "Monkeys love to eat bananas. (원숭이는 바나나 먹는 것을 좋아한다.)",
-  "orange": "I like to drink fresh orange juice. (나는 신선한 오렌지 주스를 마시는 것을 좋아한다.)",
-  "computer": "I use my computer every day for work. (나는 매일 일을 위해 컴퓨터를 사용한다.)",
-  "book": "She reads a book before going to bed. (그녀는 잠자기 전에 책을 읽는다.)",
-  "time": "Time flies when you're having fun. (즐거울 때 시간은 빨리 간다.)",
+
+// 여기에 vocabularyDatabases 객체 추가
+// 학교급별 단어 데이터베이스
+const vocabularyDatabases = {
+  // 기존 사전
+  'general': offlineDictionary,
+  
+  // 초등학교 필수 단어 (샘플)
+  'elementary': {
+    "hello": "안녕",
+    "world": "세계",
+    /* 나머지 단어 */
+  },
+  
+  // 중학교 필수 단어 (샘플)
+  'middle': {
+    "achieve": "성취하다",
+    "adventure": "모험, 모험하다",
+    /* 나머지 단어 */
+  },
+  
+  // 고등학교 필수 단어 (샘플)
+  'high': {
+    "abandon": "버리다, 떠나다",
+    "abolish": "폐지하다",
+    /* 나머지 단어 */
+  }
 };
 // 초기화 함수
 function init() {
@@ -136,7 +109,76 @@ async function addBatchWords() {
       duplicateCount++;
       continue;
     }
+    // 선택한 데이터베이스의 단어를 추가하는 함수
+function loadSelectedDatabase() {
+  const selected = databaseSelector.value;
+  
+  if (!selected || !vocabularyDatabases[selected]) {
+    showNotification('데이터베이스를 선택해주세요.', true);
+    return;
+  }
+  
+  const selectedDB = vocabularyDatabases[selected];
+  let addedCount = 0;
+  let duplicateCount = 0;
+  
+  // 각 단어를 단어장에 추가
+  for (const [word, meaning] of Object.entries(selectedDB)) {
+    // 이미 추가된 단어인지 확인
+    if (vocabulary.some(item => item.word.toLowerCase() === word.toLowerCase())) {
+      duplicateCount++;
+      continue;
+    }
     
+    // 단어 추가
+    vocabulary.push({
+      id: Date.now() + Math.random().toString(36).substr(2, 5),
+      word: word,
+      meaning: meaning
+    });
+    addedCount++;
+  }
+  
+  // 결과 저장 및 업데이트
+  saveVocabulary();
+  updateWordList();
+  
+  // 결과 알림
+  let message = `${addedCount}개 단어가 추가되었습니다.`;
+  if (duplicateCount > 0) message += ` ${duplicateCount}개 중복 단어가 무시되었습니다.`;
+  
+  showNotification(message, false);
+}
+
+// 현재 단어장 비우기
+function clearCurrentVocabulary() {
+  if (vocabulary.length === 0) {
+    showNotification('단어장이 이미 비어있습니다.', true);
+    return;
+  }
+  
+  if (confirm('현재 단어장을 모두 비우시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+    vocabulary = [];
+    saveVocabulary();
+    updateWordList();
+    showNotification('단어장이 비워졌습니다.', false);
+  }
+}
+
+// 이벤트 리스너 등록
+function addEventListeners() {
+  // 단어 추가 이벤트
+  addBatchWordsBtn.addEventListener('click', addBatchWords);
+  addManualWordBtn.addEventListener('click', addManualWord);
+  
+  // 퀴즈 관련 이벤트
+  startQuizBtn.addEventListener('click', startQuiz);
+  reviewWrongAnswersBtn.addEventListener('click', startWrongAnswersReview);
+  returnToVocabularyBtn.addEventListener('click', returnToVocabulary);
+  
+  // 여기에 데이터베이스 이벤트 리스너 추가
+  addDatabaseEventListeners();
+}
     // 단어 뜻 가져오기 (네이버 API 대신 오프라인 사전 사용)
     const meaning = await getMeaning(word);
     

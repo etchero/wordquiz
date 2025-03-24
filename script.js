@@ -1,5 +1,142 @@
 // 영어 단어장과 퀴즈 프로그램
 
+// IndexedDB 관련 코드
+// 데이터베이스 초기화
+let db;
+const DB_NAME = 'vocabularyDB';
+const STORE_NAME = 'vocabulary';
+const DB_VERSION = 1;
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      // 기존 스토어가 있으면 삭제
+      if (db.objectStoreNames.contains(STORE_NAME)) {
+        db.deleteObjectStore(STORE_NAME);
+      }
+      // 새 스토어 생성 (id를 키로 사용)
+      db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+    };
+
+    request.onsuccess = (event) => {
+      db = event.target.result;
+      console.log('IndexedDB 연결 성공');
+      resolve(db);
+    };
+
+    request.onerror = (event) => {
+      console.error('IndexedDB 연결 실패:', event.target.error);
+      reject('IndexedDB 연결 실패');
+    };
+  });
+}
+// 단어장 데이터 로드
+function loadVocabularyFromDB() {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject('데이터베이스가 초기화되지 않았습니다.');
+      return;
+    }
+
+    const transaction = db.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = (event) => {
+      console.error('데이터 로드 실패:', event.target.error);
+      reject('데이터 로드 실패');
+    };
+  });
+}
+// 단어장 데이터 저장
+function saveVocabularyToDB(words) {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject('데이터베이스가 초기화되지 않았습니다.');
+      return;
+    }
+
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+
+    // 기존 데이터 전부 삭제
+    const clearRequest = store.clear();
+
+    clearRequest.onsuccess = () => {
+      // 새 데이터 추가
+      let successCount = 0;
+
+      words.forEach(word => {
+        const request = store.add(word);
+        request.onsuccess = () => {
+          successCount++;
+          if (successCount === words.length) {
+            resolve();
+          }
+        };
+
+        request.onerror = (event) => {
+          console.error('단어 저장 실패:', event.target.error);
+        };
+      });
+    };
+
+    transaction.oncomplete = () => {
+      console.log('단어장 저장 완료');
+    };
+
+    transaction.onerror = (event) => {
+      console.error('트랜잭션 실패:', event.target.error);
+      reject('단어장 저장 실패');
+    };
+  });
+}
+// 기존 코드 수정
+// script.js에서 init 함수 수정
+async function init() {
+  try {
+    // IndexedDB 초기화
+    await initDB();
+
+    // localStorage에서 데이터 확인
+    const localData = JSON.parse(localStorage.getItem('vocabulary')) || [];
+
+    if (localData.length > 0) {
+      // localStorage에 데이터가 있으면 IndexedDB로 마이그레이션
+      vocabulary = localData;
+      await saveVocabularyToDB(vocabulary);
+      console.log('localStorage에서 IndexedDB로 데이터 마이그레이션 완료');
+    } else {
+      // IndexedDB에서 데이터 로드
+      vocabulary = await loadVocabularyFromDB();
+    }
+  } catch (error) {
+    console.error('초기화 오류:', error);
+    // 오류 발생 시 localStorage에서 로드
+    vocabulary = JSON.parse(localStorage.getItem('vocabulary')) || [];
+  }
+
+  updateWordList();
+  addEventListeners();
+}
+// 기존 saveVocabulary 함수 수정
+function saveVocabulary() {
+  // localStorage에도 백업으로 저장
+  localStorage.setItem('vocabulary', JSON.stringify(vocabulary));
+
+  // IndexedDB에 저장
+  saveVocabularyToDB(vocabulary)
+    .catch(error => {
+      console.error('IndexedDB 저장 실패:', error);
+    });
+}
+
 // DOM 요소들
 const batchWordsInput = document.getElementById('batch-words');
 const addBatchWordsBtn = document.getElementById('add-batch-words');

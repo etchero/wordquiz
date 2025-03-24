@@ -1,4 +1,5 @@
 // 영어 단어장과 퀴즈 프로그램
+
 // DOM 요소들
 const batchWordsInput = document.getElementById('batch-words');
 const addBatchWordsBtn = document.getElementById('add-batch-words');
@@ -12,6 +13,7 @@ const vocabularySection = document.getElementById('vocabulary-section');
 const quizSection = document.getElementById('quiz-section');
 const resultSection = document.getElementById('result-section');
 const notification = document.getElementById('notification');
+
 // 퀴즈 관련 요소들
 const questionNumberSpan = document.getElementById('question-number');
 const scoreDisplaySpan = document.getElementById('score-display');
@@ -24,10 +26,7 @@ const resultMessageElement = document.getElementById('result-message');
 const wrongAnswersList = document.getElementById('wrong-answers-list');
 const reviewWrongAnswersBtn = document.getElementById('review-wrong-answers');
 const returnToVocabularyBtn = document.getElementById('return-to-vocabulary');
-// 단어장 선택 UI 요소
-const databaseSelector = document.getElementById('database-selector');
-const loadDatabaseBtn = document.getElementById('load-database');
-const clearCurrentBtn = document.getElementById('clear-current');
+
 // 단어장 데이터 저장 (로컬 스토리지에서 불러오기)
 let vocabulary = JSON.parse(localStorage.getItem('vocabulary')) || [];
 let quizQuestions = [];
@@ -37,43 +36,79 @@ let timer;
 let timeLeft = 6;
 let wrongAnswers = [];
 let isReviewMode = false;
+
 // 간단한 오프라인 사전 데이터 (실제로는 더 많은 단어 포함 필요)
 const offlineDictionary = {
-  /* 기존 코드 유지 */
+  "apple": "사과",
+  "banana": "바나나",
+  "orange": "오렌지",
+  "grape": "포도",
+  "strawberry": "딸기",
+  "watermelon": "수박",
+  "computer": "컴퓨터",
+  "book": "책",
+  "pen": "펜",
+  "paper": "종이",
+  "table": "테이블",
+  "chair": "의자",
+  "door": "문",
+  "window": "창문",
+  "house": "집",
+  "car": "자동차",
+  "bicycle": "자전거",
+  "train": "기차",
+  "airplane": "비행기",
+  "school": "학교",
+  "student": "학생",
+  "teacher": "선생님",
+  "friend": "친구",
+  "family": "가족",
+  "father": "아버지",
+  "mother": "어머니",
+  "brother": "형제",
+  "sister": "자매",
+  "dog": "개",
+  "cat": "고양이",
+  "bird": "새",
+  "fish": "물고기",
+  "water": "물",
+  "food": "음식",
+  "breakfast": "아침식사",
+  "lunch": "점심식사",
+  "dinner": "저녁식사",
+  "time": "시간",
+  "day": "날",
+  "week": "주",
+  "month": "월",
+  "year": "년",
+  "today": "오늘",
+  "tomorrow": "내일",
+  "yesterday": "어제",
+  "weather": "날씨",
+  "sun": "태양",
+  "moon": "달",
+  "star": "별",
+  "rain": "비",
+  "snow": "눈"
 };
 
-// 여기에 vocabularyDatabases 객체 추가
-// 학교급별 단어 데이터베이스
-const vocabularyDatabases = {
-  // 기존 사전
-  'general': offlineDictionary,
-  
-  // 초등학교 필수 단어 (샘플)
-  'elementary': {
-    "hello": "안녕",
-    "world": "세계",
-    /* 나머지 단어 */
-  },
-  
-  // 중학교 필수 단어 (샘플)
-  'middle': {
-    "achieve": "성취하다",
-    "adventure": "모험, 모험하다",
-    /* 나머지 단어 */
-  },
-  
-  // 고등학교 필수 단어 (샘플)
-  'high': {
-    "abandon": "버리다, 떠나다",
-    "abolish": "폐지하다",
-    /* 나머지 단어 */
-  }
+// 예문 데이터
+const exampleSentences = {
+  "apple": "An apple a day keeps the doctor away. (하루에 사과 한 개면 의사가 필요 없다.)",
+  "banana": "Monkeys love to eat bananas. (원숭이는 바나나 먹는 것을 좋아한다.)",
+  "orange": "I like to drink fresh orange juice. (나는 신선한 오렌지 주스를 마시는 것을 좋아한다.)",
+  "computer": "I use my computer every day for work. (나는 매일 일을 위해 컴퓨터를 사용한다.)",
+  "book": "She reads a book before going to bed. (그녀는 잠자기 전에 책을 읽는다.)",
+  "time": "Time flies when you're having fun. (즐거울 때 시간은 빨리 간다.)",
 };
+
 // 초기화 함수
 function init() {
   updateWordList();
   addEventListeners();
-}// 이벤트 리스너 등록
+}
+
+// 이벤트 리스너 등록
 function addEventListeners() {
   // 단어 추가 이벤트
   addBatchWordsBtn.addEventListener('click', addBatchWords);
@@ -83,7 +118,9 @@ function addEventListeners() {
   startQuizBtn.addEventListener('click', startQuiz);
   reviewWrongAnswersBtn.addEventListener('click', startWrongAnswersReview);
   returnToVocabularyBtn.addEventListener('click', returnToVocabulary);
-}// 여러 단어 일괄 추가
+}
+
+// 여러 단어 일괄 추가
 async function addBatchWords() {
   const input = batchWordsInput.value.trim();
   if (!input) {
@@ -109,76 +146,7 @@ async function addBatchWords() {
       duplicateCount++;
       continue;
     }
-    // 선택한 데이터베이스의 단어를 추가하는 함수
-function loadSelectedDatabase() {
-  const selected = databaseSelector.value;
-  
-  if (!selected || !vocabularyDatabases[selected]) {
-    showNotification('데이터베이스를 선택해주세요.', true);
-    return;
-  }
-  
-  const selectedDB = vocabularyDatabases[selected];
-  let addedCount = 0;
-  let duplicateCount = 0;
-  
-  // 각 단어를 단어장에 추가
-  for (const [word, meaning] of Object.entries(selectedDB)) {
-    // 이미 추가된 단어인지 확인
-    if (vocabulary.some(item => item.word.toLowerCase() === word.toLowerCase())) {
-      duplicateCount++;
-      continue;
-    }
     
-    // 단어 추가
-    vocabulary.push({
-      id: Date.now() + Math.random().toString(36).substr(2, 5),
-      word: word,
-      meaning: meaning
-    });
-    addedCount++;
-  }
-  
-  // 결과 저장 및 업데이트
-  saveVocabulary();
-  updateWordList();
-  
-  // 결과 알림
-  let message = `${addedCount}개 단어가 추가되었습니다.`;
-  if (duplicateCount > 0) message += ` ${duplicateCount}개 중복 단어가 무시되었습니다.`;
-  
-  showNotification(message, false);
-}
-
-// 현재 단어장 비우기
-function clearCurrentVocabulary() {
-  if (vocabulary.length === 0) {
-    showNotification('단어장이 이미 비어있습니다.', true);
-    return;
-  }
-  
-  if (confirm('현재 단어장을 모두 비우시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-    vocabulary = [];
-    saveVocabulary();
-    updateWordList();
-    showNotification('단어장이 비워졌습니다.', false);
-  }
-}
-
-// 이벤트 리스너 등록
-function addEventListeners() {
-  // 단어 추가 이벤트
-  addBatchWordsBtn.addEventListener('click', addBatchWords);
-  addManualWordBtn.addEventListener('click', addManualWord);
-  
-  // 퀴즈 관련 이벤트
-  startQuizBtn.addEventListener('click', startQuiz);
-  reviewWrongAnswersBtn.addEventListener('click', startWrongAnswersReview);
-  returnToVocabularyBtn.addEventListener('click', returnToVocabulary);
-  
-  // 여기에 데이터베이스 이벤트 리스너 추가
-  addDatabaseEventListeners();
-}
     // 단어 뜻 가져오기 (네이버 API 대신 오프라인 사전 사용)
     const meaning = await getMeaning(word);
     
@@ -219,7 +187,9 @@ function addEventListeners() {
   if (notFoundCount > 0) message += ` ${notFoundCount}개 단어의 뜻을 찾지 못했습니다.`;
   
   showNotification(message, false);
-}// 단어 뜻 가져오기 (API 대신 오프라인 사전 사용)
+}
+
+// 단어 뜻 가져오기 (API 대신 오프라인 사전 사용)
 async function getMeaning(word) {
   // 실제 API 호출 부분은 네이버 API가 필요하므로 여기서는 오프라인 사전 사용
   // 실제 구현 시에는 fetch로 API 호출 코드로 대체 필요
@@ -235,7 +205,9 @@ async function getMeaning(word) {
   // 예: return await fetchFromNaverDictionary(normalizedWord);
   
   return null; // 찾지 못한 경우
-}// 수동으로 단어 추가
+}
+
+// 수동으로 단어 추가
 function addManualWord() {
   const word = manualWordInput.value.trim();
   const meaning = manualMeaningInput.value.trim();
@@ -265,13 +237,17 @@ function addManualWord() {
   manualMeaningInput.value = '';
   
   showNotification('단어가 추가되었습니다.', false);
-}// 단어 삭제
+}
+
+// 단어 삭제
 function deleteWord(id) {
   vocabulary = vocabulary.filter(item => item.id !== id);
   saveVocabulary();
   updateWordList();
   showNotification('단어가 삭제되었습니다.', false);
-}// 단어 수정 UI 표시
+}
+
+// 단어 수정 UI 표시
 function showEditForm(id, word, meaning) {
   const row = document.getElementById(`word-${id}`);
   if (!row) return;
@@ -288,7 +264,9 @@ function showEditForm(id, word, meaning) {
   `;
   
   row.innerHTML = editForm;
-}// 단어 수정 저장
+}
+
+// 단어 수정 저장
 function saveEdit(id) {
   const wordInput = document.getElementById(`edit-word-${id}`);
   const meaningInput = document.getElementById(`edit-meaning-${id}`);
@@ -323,13 +301,19 @@ function saveEdit(id) {
     updateWordList();
     showNotification('단어가 수정되었습니다.', false);
   }
-}// 단어 수정 취소
+}
+
+// 단어 수정 취소
 function cancelEdit(id) {
   updateWordList();
-}// 단어장 저장
+}
+
+// 단어장 저장
 function saveVocabulary() {
   localStorage.setItem('vocabulary', JSON.stringify(vocabulary));
-}// 단어 목록 업데이트
+}
+
+// 단어 목록 업데이트
 function updateWordList() {
   wordListTable.innerHTML = '';
   
@@ -355,7 +339,9 @@ function updateWordList() {
   
   // 퀴즈 시작 버튼 활성화/비활성화
   startQuizBtn.disabled = vocabulary.length < 4;
-}// 퀴즈 시작
+}
+
+// 퀴즈 시작
 function startQuiz() {
   if (vocabulary.length < 4) {
     showNotification('퀴즈를 시작하려면 최소 4개의 단어가 필요합니다.', true);
@@ -380,7 +366,9 @@ function startQuiz() {
   
   // 첫 문제 표시
   showQuestion(0);
-}// 오답 복습 퀴즈 시작
+}
+
+// 오답 복습 퀴즈 시작
 function startWrongAnswersReview() {
   if (wrongAnswers.length === 0) {
     showNotification('복습할 오답이 없습니다.', true);
@@ -403,7 +391,9 @@ function startWrongAnswersReview() {
   
   // 첫 문제 표시
   showQuestion(0);
-}// 랜덤 퀴즈 문제 생성
+}
+
+// 랜덤 퀴즈 문제 생성
 function createQuizQuestions() {
   // 단어장에서 최대 50개 무작위 선택
   const shuffledVocabulary = [...vocabulary].sort(() => Math.random() - 0.5);
@@ -426,7 +416,9 @@ function createQuizQuestions() {
       example: exampleSentences[item.word.toLowerCase()] || `${item.word}: ${item.meaning}`
     };
   });
-}// 오답 복습용 퀴즈 문제 생성
+}
+
+// 오답 복습용 퀴즈 문제 생성
 function createReviewQuizQuestions() {
   quizQuestions = wrongAnswers.map(item => {
     // 오답 보기 4개 생성
@@ -444,11 +436,15 @@ function createReviewQuizQuestions() {
       example: item.example
     };
   });
-}// 배열에서 랜덤으로 지정된 개수의 항목 가져오기
+}
+
+// 배열에서 랜덤으로 지정된 개수의 항목 가져오기
 function getRandomItems(array, count) {
   const shuffled = [...array].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, Math.min(count, shuffled.length));
-}// 퀴즈 문제 표시
+}
+
+// 퀴즈 문제 표시
 function showQuestion(index) {
   if (index >= quizQuestions.length) {
     showQuizResults();
@@ -478,7 +474,9 @@ function showQuestion(index) {
   
   // 타이머 시작
   startTimer();
-}// 타이머 시작
+}
+
+// 타이머 시작
 function startTimer() {
   clearInterval(timer);
   timeLeft = 6;
@@ -498,7 +496,9 @@ function startTimer() {
       timeOut();
     }
   }, 1000);
-}// 시간 초과 처리
+}
+
+// 시간 초과 처리
 function timeOut() {
   // 모든 옵션 버튼 비활성화
   const optionButtons = optionsContainer.querySelectorAll('.option-button');
@@ -527,7 +527,9 @@ function timeOut() {
     currentQuestionIndex++;
     showQuestion(currentQuestionIndex);
   }, 1500);
-}// 정답 확인
+}
+
+// 정답 확인
 function checkAnswer(selectedOption) {
   clearInterval(timer);
   
@@ -567,7 +569,9 @@ function checkAnswer(selectedOption) {
     currentQuestionIndex++;
     showQuestion(currentQuestionIndex);
   }, 1500);
-}// 정답 피드백 표시
+}
+
+// 정답 피드백 표시
 function showAnswerFeedback(isCorrect) {
   const currentQuestion = quizQuestions[currentQuestionIndex];
   
@@ -582,10 +586,14 @@ function showAnswerFeedback(isCorrect) {
   }
   
   exampleText.textContent = currentQuestion.example;
-}// 점수 표시 업데이트
+}
+
+// 점수 표시 업데이트
 function updateScoreDisplay() {
   scoreDisplaySpan.textContent = `점수: ${score}점`;
-}// 퀴즈 결과 표시
+}
+
+// 퀴즈 결과 표시
 function showQuizResults() {
   // 타이머 정지
   clearInterval(timer);
@@ -601,7 +609,7 @@ function showQuizResults() {
   // 점수 표시
   finalScoreElement.textContent = finalScorePercent;
   
- // 점수에 따른 색상과 메시지
+  // 점수에 따른 색상과 메시지
 if (finalScorePercent === 100) {
   finalScoreElement.style.color = '#2ecc71';
   resultMessageElement.textContent = '만점이라니 대박! 축하해!';
@@ -620,7 +628,8 @@ if (finalScorePercent === 100) {
 } else {
   finalScoreElement.style.color = '#e74c3c';
   resultMessageElement.textContent = '에구 아쉽다! 다시 처음부터 공부해보자!';
-}  
+}
+  
   // 오답 목록 표시
   wrongAnswersList.innerHTML = '';
   
@@ -642,12 +651,16 @@ if (finalScorePercent === 100) {
     wrongAnswersList.innerHTML = '<p>모든 문제를 맞추셨습니다! 👍</p>';
     reviewWrongAnswersBtn.classList.add('hidden');
   }
-}// 단어장으로 돌아가기
+}
+
+// 단어장으로 돌아가기
 function returnToVocabulary() {
   resultSection.classList.add('hidden');
   quizSection.classList.add('hidden');
   vocabularySection.classList.remove('hidden');
-}// 알림 표시
+}
+
+// 알림 표시
 function showNotification(message, isError) {
   notification.textContent = message;
   notification.className = 'notification';
@@ -661,10 +674,13 @@ function showNotification(message, isError) {
   setTimeout(() => {
     notification.classList.remove('show');
   }, 3000);
-}// 전역 함수 등록 (HTML에서 직접 호출 가능하도록)
+}
+
+// 전역 함수 등록 (HTML에서 직접 호출 가능하도록)
 window.deleteWord = deleteWord;
 window.showEditForm = showEditForm;
 window.saveEdit = saveEdit;
 window.cancelEdit = cancelEdit;
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', init);

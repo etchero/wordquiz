@@ -36,23 +36,27 @@
       </div>
       
       <div class="word-list-container">
-        <h3>내 단어장 <span id="word-count">(0개)</span></h3>
-        <button id="start-quiz" disabled>퀴즈 시작하기</button>
-        <div class="word-list-table">
-          <table id="word-list">
-            <thead>
-              <tr>
-                <th>번호</th>
-                <th>영어 단어</th>
-                <th>한국어 뜻</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+  <h3>내 단어장 <span id="word-count">(0개)</span></h3>
+  <div class="button-container" style="display: flex; gap: 10px; margin-bottom: 15px;">
+    <button id="start-quiz" disabled>퀴즈 시작하기</button>
+    <button id="export-vocab" class="action-button">단어장 내보내기</button>
+    <label for="import-vocab" class="action-button">단어장 가져오기</label>
+    <input type="file" id="import-vocab" accept=".json" style="display: none;">
+  </div>
+  <div class="word-list-table">
+    <table id="word-list">
+      <thead>
+        <tr>
+          <th>번호</th>
+          <th>영어 단어</th>
+          <th>한국어 뜻</th>
+          <th>관리</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
     
     <div id="quiz-section" class="section hidden">
       <div class="quiz-header">

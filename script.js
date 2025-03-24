@@ -14,6 +14,22 @@ const quizSection = document.getElementById('quiz-section');
 const resultSection = document.getElementById('result-section');
 const notification = document.getElementById('notification');
 
+const exportVocabBtn = document.createElement('button');
+exportVocabBtn.id = 'export-vocab';
+exportVocabBtn.textContent = '단어장 내보내기';
+exportVocabBtn.className = 'action-button';
+
+const importVocabInput = document.createElement('input');
+importVocabInput.type = 'file';
+importVocabInput.id = 'import-vocab';
+importVocabInput.accept = '.json';
+importVocabInput.style.display = 'none';
+
+const importVocabLabel = document.createElement('label');
+importVocabLabel.htmlFor = 'import-vocab';
+importVocabLabel.textContent = '단어장 가져오기';
+importVocabLabel.className = 'action-button';
+
 // 퀴즈 관련 요소들
 const questionNumberSpan = document.getElementById('question-number');
 const scoreDisplaySpan = document.getElementById('score-display');
@@ -106,6 +122,134 @@ const exampleSentences = {
 function init() {
   updateWordList();
   addEventListeners();
+  
+  // 새로운 버튼 추가
+  const wordListContainer = document.querySelector('.word-list-container');
+  const startQuizBtn = document.getElementById('start-quiz');
+  
+  // 내보내기/가져오기 버튼을 퀴즈 시작 버튼 옆에 추가
+  const buttonContainer = document.createElement('div');
+  buttonContainer.className = 'button-container';
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.gap = '10px';
+  buttonContainer.style.marginBottom = '15px';
+  
+  buttonContainer.appendChild(startQuizBtn.cloneNode(true)); // 기존 버튼을 복제
+  buttonContainer.appendChild(exportVocabBtn);
+  buttonContainer.appendChild(importVocabLabel);
+  buttonContainer.appendChild(importVocabInput);
+  
+  // 기존 버튼을 새 버튼 컨테이너로 교체
+  startQuizBtn.parentNode.replaceChild(buttonContainer, startQuizBtn);
+  
+  // 복제한 버튼에 이벤트 리스너 다시 추가
+  document.getElementById('start-quiz').addEventListener('click', startQuiz);
+  
+  // 내보내기/가져오기 이벤트 리스너 추가
+  exportVocabBtn.addEventListener('click', exportVocabulary);
+  importVocabInput.addEventListener('change', importVocabulary);
+}
+
+// 단어장 내보내기 함수
+function exportVocabulary() {
+  if (vocabulary.length === 0) {
+    showNotification('내보낼 단어가 없습니다.', true);
+    return;
+  }
+  
+  // 데이터를 JSON 문자열로 변환
+  const vocabData = JSON.stringify(vocabulary, null, 2);
+  
+  // 다운로드용 임시 링크 생성
+  const blob = new Blob([vocabData], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  
+  // 현재 날짜를 파일명에 포함
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+  
+  a.href = url;
+  a.download = `my_vocabulary_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  
+  // 링크 제거 및 메모리 정리
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 0);
+  
+  showNotification('단어장이 파일로 내보내졌습니다.', false);
+}
+
+// 단어장 가져오기 함수
+function importVocabulary(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const importedData = JSON.parse(e.target.result);
+      
+      if (!Array.isArray(importedData)) {
+        throw new Error('유효하지 않은 단어장 파일입니다.');
+      }
+      
+      // 가져온 데이터 유효성 검사
+      const validData = importedData.filter(item => 
+        item && typeof item === 'object' && 
+        item.word && typeof item.word === 'string' &&
+        item.meaning && typeof item.meaning === 'string'
+      );
+      
+      if (validData.length === 0) {
+        throw new Error('가져올 단어가 없습니다.');
+      }
+      
+      // 확인 메시지
+      if (vocabulary.length > 0) {
+        if (confirm(`현재 단어장에 ${vocabulary.length}개의 단어가 있습니다. 가져온 ${validData.length}개의 단어를 추가하시겠습니까?`)) {
+          // 중복 단어 필터링
+          const existingWords = new Set(vocabulary.map(item => item.word.toLowerCase()));
+          const newWords = validData.filter(item => !existingWords.has(item.word.toLowerCase()));
+          
+          // ID가 없는 경우 생성
+          newWords.forEach(item => {
+            if (!item.id) {
+              item.id = Date.now() + Math.random().toString(36).substr(2, 5);
+            }
+          });
+          
+          // 단어 추가
+          vocabulary = [...vocabulary, ...newWords];
+          saveVocabulary();
+          updateWordList();
+          
+          showNotification(`${newWords.length}개의 새 단어가 추가되었습니다.`, false);
+        }
+      } else {
+        // 단어장이 비어있는 경우 바로 가져오기
+        vocabulary = validData.map(item => ({
+          ...item,
+          id: item.id || Date.now() + Math.random().toString(36).substr(2, 5)
+        }));
+        
+        saveVocabulary();
+        updateWordList();
+        
+        showNotification(`${validData.length}개의 단어를 가져왔습니다.`, false);
+      }
+    } catch (error) {
+      showNotification('파일 가져오기 실패: ' + error.message, true);
+    }
+    
+    // 파일 입력 초기화
+    event.target.value = '';
+  };
+  
+  reader.readAsText(file);
 }
 
 // 이벤트 리스너 등록
@@ -681,6 +825,8 @@ window.deleteWord = deleteWord;
 window.showEditForm = showEditForm;
 window.saveEdit = saveEdit;
 window.cancelEdit = cancelEdit;
+window.exportVocabulary = exportVocabulary;
+window.importVocabulary = importVocabulary;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', init);
